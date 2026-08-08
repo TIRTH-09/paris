@@ -1,0 +1,110 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Scroll Animation</title>
+    <style>
+        body, html {
+            margin: 0;
+            padding: 0;
+            height: 400vh; /* Adjust height for scrolling length */
+            background-color: #000;
+        }
+
+        canvas {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100vw;
+            height: 100vh;
+        }
+    </style>
+</head>
+<body>
+    <canvas id="scroll-canvas"></canvas>
+
+    <script>
+        const canvas = document.getElementById('scroll-canvas');
+        const context = canvas.getContext('2d', { alpha: false });
+
+        const frameCount = 300;
+        const images = [];
+
+        // Preload all images for a buttery smooth experience
+        const currentFrame = index => (
+            `ezgif-27cb1e165c945104-jpg/ezgif-frame-${index.toString().padStart(3, '0')}.jpg`
+        );
+
+        for (let i = 1; i <= frameCount; i++) {
+            const img = new Image();
+            img.src = currentFrame(i);
+            images.push(img);
+        }
+
+        // Set canvas to native screen resolution to avoid blur
+        function resizeCanvas() {
+            canvas.width = window.innerWidth;
+            canvas.height = window.innerHeight;
+            renderFrame(lastFrameIndex);
+        }
+
+        // Draw image covering the entire canvas (similar to object-fit: cover)
+        const renderFrame = index => {
+            const img = images[index];
+            if (!img || !img.complete) return;
+
+            const canvasRatio = canvas.width / canvas.height;
+            const imgRatio = img.width / img.height;
+            
+            let drawWidth = canvas.width;
+            let drawHeight = canvas.width / imgRatio;
+            let startX = 0;
+            let startY = (canvas.height - drawHeight) / 2;
+            
+            if (canvasRatio < imgRatio) {
+                drawWidth = canvas.height * imgRatio;
+                drawHeight = canvas.height;
+                startX = (canvas.width - drawWidth) / 2;
+                startY = 0;
+            }
+
+            context.clearRect(0, 0, canvas.width, canvas.height);
+            context.drawImage(img, startX, startY, drawWidth, drawHeight);
+        };
+
+        // Draw initial frame once loaded
+        images[0].onload = () => {
+            resizeCanvas();
+        };
+
+        window.addEventListener('resize', resizeCanvas);
+
+        let lastFrameIndex = 0;
+        let ticking = false;
+
+        // Smooth scroll handling
+        window.addEventListener('scroll', () => {
+            if (!ticking) {
+                window.requestAnimationFrame(() => {
+                    const scrollTop = document.documentElement.scrollTop;
+                    const maxScrollTop = document.documentElement.scrollHeight - window.innerHeight;
+                    const scrollFraction = scrollTop / maxScrollTop;
+                    
+                    const frameIndex = Math.min(
+                        frameCount - 1,
+                        Math.max(0, Math.floor(scrollFraction * frameCount))
+                    );
+
+                    if (frameIndex !== lastFrameIndex) {
+                        renderFrame(frameIndex);
+                        lastFrameIndex = frameIndex;
+                    }
+                    ticking = false;
+                });
+                ticking = true;
+            }
+        });
+    </script>
+</body>
+</html>

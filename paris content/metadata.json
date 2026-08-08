@@ -1,0 +1,6 @@
+{
+  "name": "Clean Energy Hero Banner",
+  "description": "Interactive clean and smart solar energy hero banner and landing page layout inspired by Sunrock.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
