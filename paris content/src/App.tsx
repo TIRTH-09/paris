@@ -78,13 +78,13 @@ export default function App() {
         />
       </div>
 
-      {/* Section 2: Where Every Street Tells a Story */}
+      {/*  Where Every Street Tells a Story */}
       <ParisStorySection openModal={(modal) => setActiveModal(modal)} />
 
-      {/* Section 3: Experiences — Your Paris Moments */}
+      {/*  Experiences — Your Paris Moments */}
       <ParisMomentsSection openModal={(modal) => setActiveModal(modal)} />
 
-      {/* Section 4: Final CTA — Your Story Starts Here */}
+      {/*  Final CTA — Your Story Starts Here */}
       <ParisFinalCtaSection openModal={(modal) => setActiveModal(modal)} />
 
       {/* Interactive Modals and Drawers */}
