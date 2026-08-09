@@ -18,7 +18,7 @@ export const BannerHeroContent: React.FC<BannerHeroContentProps> = ({
   openModal,
 }) => {
   return (
-    <div className="flex flex-col items-center text-center max-w-4xl mx-auto px-4 pt-12 sm:pt-20 md:pt-24 pb-8 my-auto z-20 transition-all">
+    <div className="flex flex-col items-center text-center max-w-4xl mx-auto px-4 pt-4 sm:pt-20 md:pt-24 pb-6 my-auto z-20 transition-all">
       {/* Eyebrow badge matching Sophisticated Dark design theme */}
       <div className="mb-4">
         <span className="text-[11px] uppercase tracking-[0.4em] text-emerald-400 font-bold font-mono-tech">

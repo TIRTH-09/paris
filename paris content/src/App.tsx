@@ -46,7 +46,7 @@ export default function App() {
       <div className="corner-frame-br z-20 hidden md:block" style={{ position: 'fixed' }} />
 
       {/* Main Banner Composition (Top Nav -> Hero Content -> Bottom Glass Cards) */}
-      <div id="section-overview" className="relative z-10 min-h-screen flex flex-col justify-between">
+      <div id="section-overview" className="relative z-10 min-h-[100dvh] flex flex-col justify-between">
         {/* 1. Header Navigation */}
         <BannerHeader
           companyName={bannerData.companyName}

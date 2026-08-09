@@ -14,7 +14,7 @@ export const ScrollCanvas: React.FC = () => {
   const rafIdRef = useRef<number>(0);
   const loadedCountRef = useRef(0);
 
-  // --- Draw a single frame with object-fit: cover logic ---
+  // --- Draw a single frame with cover fitting logic (all screen sizes) ---
   const renderFrame = useCallback((frameIndex: number) => {
     const canvas = canvasRef.current;
     if (!canvas) return;
@@ -27,19 +27,23 @@ export const ScrollCanvas: React.FC = () => {
     const canvasRatio = canvas.width / canvas.height;
     const imgRatio = img.naturalWidth / img.naturalHeight;
 
-    let drawWidth = canvas.width;
-    let drawHeight = canvas.width / imgRatio;
-    let startX = 0;
-    let startY = (canvas.height - drawHeight) / 2;
+    let drawWidth, drawHeight, startX, startY;
 
-    if (canvasRatio < imgRatio) {
+    // Always use cover logic: fill entire canvas, no black bars on any device
+    if (canvasRatio > imgRatio) {
+      // Canvas is wider than image — fit to width, center vertically
+      drawWidth = canvas.width;
+      drawHeight = canvas.width / imgRatio;
+      startX = 0;
+      startY = (canvas.height - drawHeight) / 2;
+    } else {
+      // Canvas is taller than image — fit to height, center horizontally
       drawWidth = canvas.height * imgRatio;
       drawHeight = canvas.height;
       startX = (canvas.width - drawWidth) / 2;
       startY = 0;
     }
 
-    ctx.clearRect(0, 0, canvas.width, canvas.height);
     ctx.drawImage(img, startX, startY, drawWidth, drawHeight);
   }, []);
 
@@ -47,8 +51,13 @@ export const ScrollCanvas: React.FC = () => {
   const resizeCanvas = useCallback(() => {
     const canvas = canvasRef.current;
     if (!canvas) return;
-    canvas.width = window.innerWidth;
-    canvas.height = window.innerHeight;
+    // Cap devicePixelRatio at 2 for performance on high-DPI mobile screens
+    const dpr = Math.min(window.devicePixelRatio || 1, 2);
+    // Use visualViewport when available (fixes mobile browser chrome resize issues)
+    const vvw = window.visualViewport?.width || window.innerWidth;
+    const vvh = window.visualViewport?.height || window.innerHeight;
+    canvas.width = vvw * dpr;
+    canvas.height = vvh * dpr;
     renderFrame(Math.round(currentFrameRef.current));
   }, [renderFrame]);
 
@@ -57,11 +66,12 @@ export const ScrollCanvas: React.FC = () => {
     const target = targetFrameRef.current;
     const current = currentFrameRef.current;
     // Lerp factor: lower = smoother/slower, higher = snappier
-    const lerpFactor = 0.1;
+    // Lowered to 0.06 for a more buttery smooth transition on mobile
+    const lerpFactor = 0.06;
     const diff = target - current;
 
-    // Only redraw when we haven't converged
-    if (Math.abs(diff) > 0.3) {
+    // Only redraw when we haven't converged (reduced threshold for smoother tail-end settling)
+    if (Math.abs(diff) > 0.1) {
       currentFrameRef.current += diff * lerpFactor;
       const frameIdx = Math.min(
         FRAME_COUNT - 1,
@@ -92,9 +102,17 @@ export const ScrollCanvas: React.FC = () => {
 
     // --- Scroll handler: compute target frame ---
     const onScroll = () => {
-      const scrollTop = document.documentElement.scrollTop;
-      const maxScroll =
-        document.documentElement.scrollHeight - window.innerHeight;
+      // Use standard window.scrollY with fallback
+      const scrollTop = window.scrollY || document.documentElement.scrollTop;
+      
+      // Robust calculation for document height across mobile browsers
+      const docHeight = Math.max(
+        document.body.scrollHeight, document.documentElement.scrollHeight,
+        document.body.offsetHeight, document.documentElement.offsetHeight,
+        document.body.clientHeight, document.documentElement.clientHeight
+      );
+      
+      const maxScroll = docHeight - window.innerHeight;
       if (maxScroll <= 0) return;
       const fraction = Math.min(1, Math.max(0, scrollTop / maxScroll));
       targetFrameRef.current = fraction * (FRAME_COUNT - 1);
@@ -103,6 +121,8 @@ export const ScrollCanvas: React.FC = () => {
     // --- Wire up events ---
     window.addEventListener('scroll', onScroll, { passive: true });
     window.addEventListener('resize', resizeCanvas);
+    // visualViewport resize handles mobile browser address bar show/hide
+    window.visualViewport?.addEventListener('resize', resizeCanvas);
 
     // Kick off the animation loop
     rafIdRef.current = requestAnimationFrame(animate);
@@ -113,6 +133,7 @@ export const ScrollCanvas: React.FC = () => {
     return () => {
       window.removeEventListener('scroll', onScroll);
       window.removeEventListener('resize', resizeCanvas);
+      window.visualViewport?.removeEventListener('resize', resizeCanvas);
       cancelAnimationFrame(rafIdRef.current);
     };
   }, [animate, resizeCanvas]);
@@ -128,24 +149,24 @@ export const ScrollCanvas: React.FC = () => {
           top: 0,
           left: 0,
           width: '100vw',
-          height: '100vh',
+          height: '100dvh',
           zIndex: 0,
           pointerEvents: 'none',
           willChange: 'transform',
         }}
       />
-      {/* Dark gradient overlay for text readability */}
+      {/* Dark gradient overlay for text readability — lighter on mobile to not hide image */}
       <div
         style={{
           position: 'fixed',
           top: 0,
           left: 0,
           width: '100vw',
-          height: '100vh',
+          height: '100dvh',
           zIndex: 1,
           pointerEvents: 'none',
           background:
-            'linear-gradient(to bottom, rgba(0,0,0,0.45) 0%, rgba(0,0,0,0.25) 40%, rgba(0,0,0,0.35) 70%, rgba(0,0,0,0.55) 100%)',
+            'linear-gradient(to bottom, rgba(0,0,0,0.35) 0%, rgba(0,0,0,0.15) 35%, rgba(0,0,0,0.25) 65%, rgba(0,0,0,0.50) 100%)',
         }}
       />
     </>
