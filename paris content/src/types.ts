@@ -22,5 +22,8 @@ export interface LanguageOption {
   flag: string;
 }
 
+export type BackgroundMode = 'scroll-video' | 'static-image' | 'gradient' | 'studio-teal' | 'studio-dark' | 'studio-light' | 'photo' | 'transparent-grid';
+
 export type ActiveModal = 'consultation' | 'menu' | 'solutions' | 'projects' | 'about' | 'contact' | 'editor' | null;
+
 
